@@ -57,7 +57,6 @@ export function useEditorState(): EditorState & EditorActions {
         });
     }, []);
 
-<<<<<<< HEAD
     const duplicateScreenshot = useCallback((id: string) => {
         setState(prev => {
             const screenshotIndex = prev.screenshots.findIndex(s => s.id === id);
@@ -122,8 +121,6 @@ export function useEditorState(): EditorState & EditorActions {
         });
     }, []);
 
-=======
->>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
     const setActiveScreenshot = useCallback((index: number) => {
         setState(prev => ({
             ...prev,
@@ -194,12 +191,9 @@ export function useEditorState(): EditorState & EditorActions {
         setProjectName,
         addScreenshot,
         removeScreenshot,
-<<<<<<< HEAD
         duplicateScreenshot,
         moveScreenshotLeft,
         moveScreenshotRight,
-=======
->>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
         setActiveScreenshot,
         updateScreenshotBackground,
         addElement,
