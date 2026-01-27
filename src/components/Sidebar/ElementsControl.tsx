@@ -1,7 +1,11 @@
 'use client';
 
 import { v4 as uuidv4 } from 'uuid';
+<<<<<<< HEAD
 import { Square, Circle, RectangleHorizontal, Triangle, Diamond, Pentagon, Hexagon, Octagon, Star, ArrowRight, ArrowLeft, Heart, MessageSquare } from 'lucide-react';
+=======
+import { Square, Circle, RectangleHorizontal } from 'lucide-react';
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 import { ShapeElement } from '@/types/editor';
 
 interface ElementsControlProps {
@@ -61,6 +65,7 @@ export default function ElementsControl({ onAddElement }: ElementsControlProps) 
         onAddElement(element);
     };
 
+<<<<<<< HEAD
     const addTriangleUp = () => {
         const element: ShapeElement = {
             id: uuidv4(),
@@ -146,6 +151,8 @@ export default function ElementsControl({ onAddElement }: ElementsControlProps) 
         onAddElement(element);
     };
 
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
     return (
         <div className="control-section">
             <h3 className="control-title">Elements</h3>
@@ -156,16 +163,20 @@ export default function ElementsControl({ onAddElement }: ElementsControlProps) 
                     <span>Rectangle</span>
                 </button>
 
+<<<<<<< HEAD
                 <button className="element-btn" onClick={addRoundedRect} title="Rounded Rectangle">
                     <RectangleHorizontal size={24} />
                     <span>Rounded</span>
                 </button>
 
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
                 <button className="element-btn" onClick={addCircle} title="Circle">
                     <Circle size={24} />
                     <span>Circle</span>
                 </button>
 
+<<<<<<< HEAD
                 <button className="element-btn" onClick={addTriangleUp} title="Triangle Up">
                     <Triangle size={24} />
                     <span>Triangle ↑</span>
@@ -274,6 +285,11 @@ export default function ElementsControl({ onAddElement }: ElementsControlProps) 
                 <button className="element-btn" onClick={() => createShape('pill-vertical', '#FFB6C1', 60, 120)} title="Pill Vertical">
                     <RectangleHorizontal size={24} style={{ transform: 'rotate(90deg)' }} />
                     <span>Pill |</span>
+=======
+                <button className="element-btn" onClick={addRoundedRect} title="Rounded Rectangle">
+                    <RectangleHorizontal size={24} />
+                    <span>Pill Shape</span>
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
                 </button>
             </div>
         </div>

@@ -1,15 +1,22 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
+<<<<<<< HEAD
 import { Stage, Layer, Rect, Text, Image, Circle, Group, Transformer, Line } from 'react-konva';
 import { v4 as uuidv4 } from 'uuid';
+=======
+import { Stage, Layer, Rect, Text, Image, Circle, Group, Transformer } from 'react-konva';
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 import {
     Screenshot,
     EditorElement,
     TextElement,
     ImageElement,
     ShapeElement,
+<<<<<<< HEAD
     PenElement,
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
     SCREENSHOT_WIDTH,
     SCREENSHOT_HEIGHT,
     CANVAS_SCALE
@@ -22,12 +29,15 @@ interface EditorCanvasProps {
     selectedElementId: string | null;
     onSelectElement: (id: string | null) => void;
     onUpdateElement: (screenshotId: string, elementId: string, updates: Partial<EditorElement>) => void;
+<<<<<<< HEAD
     isPenMode?: boolean;
     isEraserMode?: boolean;
     penColor?: string;
     penWeight?: number;
     onAddPenElement?: (element: PenElement) => void;
     onRemoveElement?: (elementId: string) => void;
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 }
 
 // Text Element with advanced resizing and editing
@@ -53,6 +63,7 @@ function TextCanvasElement({
         }
     }, [isSelected, isEditing]);
 
+<<<<<<< HEAD
     // Update alignment when it changes
     useEffect(() => {
         if (textRef.current) {
@@ -61,6 +72,8 @@ function TextCanvasElement({
         }
     }, [element.align]);
 
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
     const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
         onUpdate({
             position: { x: e.target.x(), y: e.target.y() }
@@ -250,6 +263,7 @@ function ImageCanvasElement({
 
     useEffect(() => {
         const img = new window.Image();
+<<<<<<< HEAD
         img.onload = () => {
             // Only set image if it has valid dimensions
             if (img.width > 0 && img.height > 0) {
@@ -261,6 +275,10 @@ function ImageCanvasElement({
             setImage(null);
         };
         img.src = element.src;
+=======
+        img.src = element.src;
+        img.onload = () => setImage(img);
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
     }, [element.src]);
 
     useEffect(() => {
@@ -286,6 +304,7 @@ function ImageCanvasElement({
         node.scaleX(1);
         node.scaleY(1);
 
+<<<<<<< HEAD
         const newWidth = Math.max(20, node.width() * scaleX);
         const newHeight = Math.max(20, node.height() * scaleY);
 
@@ -309,6 +328,18 @@ function ImageCanvasElement({
     // Ensure element size is valid
     const validWidth = Math.max(1, element.size.width);
     const validHeight = Math.max(1, element.size.height);
+=======
+        onUpdate({
+            position: { x: node.x(), y: node.y() },
+            size: {
+                width: Math.max(20, node.width() * scaleX),
+                height: Math.max(20, node.height() * scaleY),
+            },
+        });
+    };
+
+    if (!image) return null;
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 
     return (
         <>
@@ -317,8 +348,13 @@ function ImageCanvasElement({
                 x={element.position.x}
                 y={element.position.y}
                 image={image}
+<<<<<<< HEAD
                 width={validWidth}
                 height={validHeight}
+=======
+                width={element.size.width}
+                height={element.size.height}
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
                 draggable={!element.locked}
                 onClick={onSelect}
                 onTap={onSelect}
@@ -361,7 +397,11 @@ function ShapeCanvasElement({
     onSelect: () => void;
     onUpdate: (updates: Partial<ShapeElement>) => void;
 }) {
+<<<<<<< HEAD
     const shapeRef = useRef<Konva.Shape | Konva.Group | Konva.Rect | Konva.Circle>(null);
+=======
+    const shapeRef = useRef<Konva.Shape>(null);
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
     const trRef = useRef<Konva.Transformer>(null);
 
     useEffect(() => {
@@ -393,6 +433,7 @@ function ShapeCanvasElement({
                 position: { x: node.x() - newRadius, y: node.y() - newRadius },
                 size: { width: newRadius * 2, height: newRadius * 2 },
             });
+<<<<<<< HEAD
         } else if (node instanceof Konva.Group) {
             // Handle Group-based shapes (triangle, diamond, pentagon)
             const newWidth = Math.max(20, element.size.width * scaleX);
@@ -403,6 +444,9 @@ function ShapeCanvasElement({
             });
         } else {
             // Handle Rect-based shapes (rectangle, rounded-rect)
+=======
+        } else {
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
             onUpdate({
                 position: { x: node.x(), y: node.y() },
                 size: {
@@ -413,6 +457,7 @@ function ShapeCanvasElement({
         }
     };
 
+<<<<<<< HEAD
     // Helper function to render custom shapes using Line
     const renderCustomShape = (points: number[], closed: boolean = true) => {
         return (
@@ -669,6 +714,8 @@ function ShapeCanvasElement({
         }
     };
 
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
     if (element.shapeType === 'circle') {
         return (
             <>
@@ -705,6 +752,7 @@ function ShapeCanvasElement({
         );
     }
 
+<<<<<<< HEAD
     // Render custom shapes (all non-rect/circle shapes)
     const customShapes = ['triangle-up', 'triangle-down', 'diamond', 'pentagon', 'hexagon', 'octagon', 
                           'star-5', 'star-10', 'star-12', 'arrow-right', 'arrow-left', 'arrow-flag', 'banner',
@@ -739,6 +787,8 @@ function ShapeCanvasElement({
     }
 
     // Render rectangle and rounded-rect
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
     return (
         <>
             <Rect
@@ -825,6 +875,7 @@ function CanvasElement({
         );
     }
 
+<<<<<<< HEAD
     if (element.type === 'pen') {
         return (
             <PenCanvasElement
@@ -892,12 +943,18 @@ function PenCanvasElement({
     );
 }
 
+=======
+    return null;
+}
+
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 export default function EditorCanvas({
     screenshots,
     activeScreenshotIndex,
     selectedElementId,
     onSelectElement,
     onUpdateElement,
+<<<<<<< HEAD
     isPenMode = false,
     isEraserMode = false,
     penColor = '#0000FF',
@@ -911,6 +968,11 @@ export default function EditorCanvas({
     const [isDrawing, setIsDrawing] = useState(false);
     const [currentPoints, setCurrentPoints] = useState<number[]>([]);
     const currentPenElementRef = useRef<string | null>(null);
+=======
+}: EditorCanvasProps) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 
     // Calculate stage dimensions
     useEffect(() => {
@@ -937,6 +999,7 @@ export default function EditorCanvas({
     const startX = Math.max(40, (stageSize.width - totalWidth) / 2);
     const startY = 40;
 
+<<<<<<< HEAD
     // Eraser handler - find and remove elements under cursor
     const handleEraser = (e: Konva.KonvaEventObject<MouseEvent>) => {
         if (!isEraserMode || !onRemoveElement) return;
@@ -1103,10 +1166,16 @@ export default function EditorCanvas({
     const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
         // If clicking on empty area, deselect (only if not in pen mode)
         if (!isPenMode && e.target === e.target.getStage()) {
+=======
+    const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
+        // If clicking on empty area, deselect
+        if (e.target === e.target.getStage()) {
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
             onSelectElement(null);
         }
     };
 
+<<<<<<< HEAD
     // Don't render Stage until we have valid dimensions
     if (stageSize.width === 0 || stageSize.height === 0) {
         return (
@@ -1138,6 +1207,14 @@ export default function EditorCanvas({
                 style={{
                     cursor: isPenMode ? 'crosshair' : isEraserMode ? 'grab' : 'default'
                 }}
+=======
+    return (
+        <div ref={containerRef} className="canvas-container">
+            <Stage
+                width={stageSize.width}
+                height={stageSize.height}
+                onClick={handleStageClick}
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
             >
                 <Layer>
                     {screenshots.map((screenshot, index) => {
@@ -1147,6 +1224,7 @@ export default function EditorCanvas({
                         return (
                             <Group key={screenshot.id}>
                                 {/* Screenshot background */}
+<<<<<<< HEAD
                                 {(() => {
                                     const bgColor = screenshot.backgroundColor;
                                     // Check if it's a gradient
@@ -1227,6 +1305,21 @@ export default function EditorCanvas({
                                         />
                                     );
                                 })()}
+=======
+                                <Rect
+                                    x={x}
+                                    y={startY}
+                                    width={scaledWidth}
+                                    height={scaledHeight}
+                                    fill={screenshot.backgroundColor}
+                                    cornerRadius={8}
+                                    shadowColor="rgba(0,0,0,0.15)"
+                                    shadowBlur={10}
+                                    shadowOffset={{ x: 0, y: 4 }}
+                                    stroke={isActive ? '#3B82F6' : 'transparent'}
+                                    strokeWidth={isActive ? 3 : 0}
+                                />
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 
                                 {/* Elements scaled and positioned within screenshot */}
                                 <Group

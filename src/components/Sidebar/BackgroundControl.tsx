@@ -1,8 +1,12 @@
 'use client';
 
+<<<<<<< HEAD
 import { useState, useRef, useEffect } from 'react';
 import { PRESET_COLORS } from '@/types/editor';
 import { Droplet, Eye } from 'lucide-react';
+=======
+import { PRESET_COLORS } from '@/types/editor';
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 
 interface BackgroundControlProps {
     currentColor: string;
@@ -13,6 +17,7 @@ export default function BackgroundControl({
     currentColor,
     onColorChange
 }: BackgroundControlProps) {
+<<<<<<< HEAD
     const [activeTab, setActiveTab] = useState<'solid' | 'gradient'>('solid');
     const [hue, setHue] = useState(0);
     const [saturation, setSaturation] = useState(100);
@@ -194,10 +199,13 @@ export default function BackgroundControl({
         ['#ADD8E6', '#FF0000'],
     ];
 
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
     return (
         <div className="control-section">
             <h3 className="control-title">Background</h3>
 
+<<<<<<< HEAD
             {/* Tabs */}
             <div className="color-picker-tabs">
                 <button
@@ -391,6 +399,38 @@ export default function BackgroundControl({
                     </div>
                 </>
             )}
+=======
+            <div className="color-grid">
+                {PRESET_COLORS.map((color) => (
+                    <button
+                        key={color}
+                        className={`color-swatch ${currentColor === color ? 'active' : ''}`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => onColorChange(color)}
+                        title={color}
+                    />
+                ))}
+            </div>
+
+            <div className="custom-color">
+                <label className="control-label">Custom Color</label>
+                <div className="color-input-wrapper">
+                    <input
+                        type="color"
+                        value={currentColor}
+                        onChange={(e) => onColorChange(e.target.value)}
+                        className="color-picker"
+                    />
+                    <input
+                        type="text"
+                        value={currentColor}
+                        onChange={(e) => onColorChange(e.target.value)}
+                        className="color-text-input"
+                        placeholder="#FFFFFF"
+                    />
+                </div>
+            </div>
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
         </div>
     );
 }

@@ -41,7 +41,10 @@ body {
   display: flex;
   flex: 1;
   overflow: hidden;
+<<<<<<< HEAD
   flex-direction: row-reverse;
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 }
 
 .canvas-area {
@@ -159,7 +162,11 @@ body {
 .sidebar {
   width: 300px;
   background: var(--bg-primary);
+<<<<<<< HEAD
   border-right: 1px solid var(--border-color);
+=======
+  border-left: 1px solid var(--border-color);
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -256,6 +263,7 @@ body {
   box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent-color);
 }
 
+<<<<<<< HEAD
 /* Color Picker Tabs */
 .color-picker-tabs {
   display: flex;
@@ -361,12 +369,39 @@ body {
   padding: 8px 12px;
   border: 1px solid var(--border-color);
   border-radius: 6px;
+=======
+/* Custom Color */
+.custom-color {
+  margin-top: 12px;
+}
+
+.color-input-wrapper {
+  display: flex;
+  gap: 8px;
+}
+
+.color-picker {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.color-text-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
   background: var(--bg-tertiary);
   color: var(--text-primary);
   font-size: 14px;
   font-family: monospace;
 }
 
+<<<<<<< HEAD
 .hex-input:focus {
   outline: none;
   border-color: var(--accent-color);
@@ -551,6 +586,8 @@ body {
   box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent-color);
 }
 
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 /* Text Controls */
 .text-buttons {
   display: flex;
@@ -807,22 +844,44 @@ body {
   background: #dc2626;
 }
 
+<<<<<<< HEAD
 /* Screenshot Thumbnail with Actions */
+=======
+/* Screenshot Thumbnail with Delete */
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 .screenshot-thumb-wrapper {
   position: relative;
 }
 
+<<<<<<< HEAD
 .thumb-actions {
   position: absolute;
   top: -8px;
   right: -8px;
   display: flex;
   gap: 4px;
+=======
+.thumb-delete-btn {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: #ef4444;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
   opacity: 0;
   transition: all 0.2s;
   z-index: 10;
 }
 
+<<<<<<< HEAD
 .screenshot-thumb-wrapper:hover .thumb-actions {
   opacity: 1;
 }
@@ -865,6 +924,15 @@ body {
 
 .thumb-delete-btn:hover {
   background: #dc2626;
+=======
+.screenshot-thumb-wrapper:hover .thumb-delete-btn {
+  opacity: 1;
+}
+
+.thumb-delete-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 }
 
 /* Selected Element Panel */
@@ -1070,6 +1138,7 @@ body {
   color: var(--text-muted);
   margin: 8px 0 0 0;
   font-style: italic;
+<<<<<<< HEAD
 }
 
 /* Pen Control */
@@ -1253,4 +1322,6 @@ body {
 .weight-input:focus {
   outline: none;
   border-color: var(--accent-color);
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 }

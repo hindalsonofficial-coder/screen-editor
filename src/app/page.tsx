@@ -1,12 +1,20 @@
 'use client';
 
+<<<<<<< HEAD
 import { useEffect, useCallback, useMemo, useState } from 'react';
+=======
+import { useEffect, useCallback, useMemo } from 'react';
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 import dynamic from 'next/dynamic';
 import TopBar from '@/components/TopBar/TopBar';
 import Sidebar from '@/components/Sidebar/Sidebar';
 import ScreenshotList from '@/components/ScreenshotList/ScreenshotList';
 import { useEditorState } from '@/hooks/useEditorState';
+<<<<<<< HEAD
 import { TextElement, ImageElement, ShapeElement, PenElement, EditorElement } from '@/types/editor';
+=======
+import { TextElement, ImageElement, ShapeElement, EditorElement } from '@/types/editor';
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 
 // Dynamic import for Konva to avoid SSR issues
 const EditorCanvas = dynamic(
@@ -23,9 +31,12 @@ export default function Home() {
     setProjectName,
     addScreenshot,
     removeScreenshot,
+<<<<<<< HEAD
     duplicateScreenshot,
     moveScreenshotLeft,
     moveScreenshotRight,
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
     setActiveScreenshot,
     updateScreenshotBackground,
     addElement,
@@ -36,12 +47,15 @@ export default function Home() {
 
   const activeScreenshot = screenshots[activeScreenshotIndex];
 
+<<<<<<< HEAD
   // Pen tool state
   const [penColor, setPenColor] = useState('#0000FF');
   const [penWeight, setPenWeight] = useState(27);
   const [isPenMode, setIsPenMode] = useState(false);
   const [isEraserMode, setIsEraserMode] = useState(false);
 
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
   // Find the selected element
   const selectedElement = useMemo(() => {
     if (!selectedElementId || !activeScreenshot) return null;
@@ -109,12 +123,15 @@ export default function Home() {
             selectedElementId={selectedElementId}
             onSelectElement={selectElement}
             onUpdateElement={updateElement}
+<<<<<<< HEAD
             isPenMode={isPenMode}
             isEraserMode={isEraserMode}
             penColor={penColor}
             penWeight={penWeight}
             onAddPenElement={(element) => addElement(activeScreenshot.id, element)}
             onRemoveElement={(elementId) => removeElement(activeScreenshot.id, elementId)}
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
           />
 
           <ScreenshotList
@@ -123,9 +140,12 @@ export default function Home() {
             onSelect={setActiveScreenshot}
             onAdd={addScreenshot}
             onDelete={removeScreenshot}
+<<<<<<< HEAD
             onDuplicate={duplicateScreenshot}
             onMoveLeft={moveScreenshotLeft}
             onMoveRight={moveScreenshotRight}
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
           />
         </div>
 
@@ -138,6 +158,7 @@ export default function Home() {
           selectedElement={selectedElement}
           onDeleteElement={handleDeleteSelectedElement}
           onUpdateSelectedElement={handleUpdateSelectedElement}
+<<<<<<< HEAD
           penColor={penColor}
           penWeight={penWeight}
           onPenColorChange={setPenColor}
@@ -146,6 +167,8 @@ export default function Home() {
           onPenModeChange={setIsPenMode}
           isEraserMode={isEraserMode}
           onEraserModeChange={setIsEraserMode}
+=======
+>>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
         />
       </div>
     </div>
