@@ -1,11 +1,7 @@
 'use client';
 
 import { Screenshot, SCREENSHOT_WIDTH, SCREENSHOT_HEIGHT } from '@/types/editor';
-<<<<<<< HEAD
 import { Plus, X, Copy, ChevronLeft, ChevronRight } from 'lucide-react';
-=======
-import { Plus, X } from 'lucide-react';
->>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 
 interface ScreenshotListProps {
     screenshots: Screenshot[];
@@ -13,12 +9,9 @@ interface ScreenshotListProps {
     onSelect: (index: number) => void;
     onAdd: () => void;
     onDelete: (id: string) => void;
-<<<<<<< HEAD
     onDuplicate: (id: string) => void;
     onMoveLeft: (index: number) => void;
     onMoveRight: (index: number) => void;
-=======
->>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 }
 
 export default function ScreenshotList({
@@ -27,12 +20,9 @@ export default function ScreenshotList({
     onSelect,
     onAdd,
     onDelete,
-<<<<<<< HEAD
     onDuplicate,
     onMoveLeft,
     onMoveRight,
-=======
->>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 }: ScreenshotListProps) {
     const thumbWidth = 60;
     const thumbHeight = (SCREENSHOT_HEIGHT / SCREENSHOT_WIDTH) * thumbWidth;
@@ -44,7 +34,6 @@ export default function ScreenshotList({
         }
     };
 
-<<<<<<< HEAD
     const handleDuplicate = (e: React.MouseEvent, screenshotId: string) => {
         e.stopPropagation();
         onDuplicate(screenshotId);
@@ -60,8 +49,6 @@ export default function ScreenshotList({
         onMoveRight(index);
     };
 
-=======
->>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
     return (
         <div className="screenshot-list">
             <div className="screenshot-list-inner">
@@ -87,7 +74,6 @@ export default function ScreenshotList({
                             </div>
                         </button>
 
-<<<<<<< HEAD
                         <div className="thumb-actions">
                             {/* Move Left Button */}
                             {index > 0 && (
@@ -131,17 +117,6 @@ export default function ScreenshotList({
                                 </button>
                             )}
                         </div>
-=======
-                        {screenshots.length > 1 && (
-                            <button
-                                className="thumb-delete-btn"
-                                onClick={(e) => handleDelete(e, screenshot.id)}
-                                title="Delete screenshot"
-                            >
-                                <X size={12} />
-                            </button>
-                        )}
->>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
                     </div>
                 ))}
 

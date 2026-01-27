@@ -5,10 +5,7 @@ import {
     Type,
     Image as ImageIcon,
     Shapes,
-<<<<<<< HEAD
     Pen,
-=======
->>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
     ChevronDown,
     ChevronRight,
     Trash2,
@@ -20,12 +17,8 @@ import BackgroundControl from './BackgroundControl';
 import TextControl from './TextControl';
 import ImageControl from './ImageControl';
 import ElementsControl from './ElementsControl';
-<<<<<<< HEAD
 import PenControl from './PenControl';
 import { TextElement, ImageElement, ShapeElement, PenElement, EditorElement } from '@/types/editor';
-=======
-import { TextElement, ImageElement, ShapeElement, EditorElement } from '@/types/editor';
->>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 
 interface SidebarProps {
     currentBackgroundColor: string;
@@ -36,7 +29,6 @@ interface SidebarProps {
     selectedElement: EditorElement | null;
     onDeleteElement: () => void;
     onUpdateSelectedElement: (updates: Partial<EditorElement>) => void;
-<<<<<<< HEAD
     penColor: string;
     penWeight: number;
     onPenColorChange: (color: string) => void;
@@ -48,11 +40,6 @@ interface SidebarProps {
 }
 
 type SectionKey = 'background' | 'text' | 'image' | 'elements' | 'pen';
-=======
-}
-
-type SectionKey = 'background' | 'text' | 'image' | 'elements';
->>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
 
 export default function Sidebar({
     currentBackgroundColor,
@@ -63,7 +50,6 @@ export default function Sidebar({
     selectedElement,
     onDeleteElement,
     onUpdateSelectedElement,
-<<<<<<< HEAD
     penColor,
     penWeight,
     onPenColorChange,
@@ -75,11 +61,6 @@ export default function Sidebar({
 }: SidebarProps) {
     const [openSections, setOpenSections] = useState<Set<SectionKey>>(
         new Set(['background', 'text', 'image', 'elements', 'pen'])
-=======
-}: SidebarProps) {
-    const [openSections, setOpenSections] = useState<Set<SectionKey>>(
-        new Set(['background', 'text', 'image', 'elements'])
->>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
     );
 
     const toggleSection = (section: SectionKey) => {
@@ -99,10 +80,7 @@ export default function Sidebar({
         { key: 'text' as SectionKey, icon: Type, label: 'Text' },
         { key: 'image' as SectionKey, icon: ImageIcon, label: 'Images' },
         { key: 'elements' as SectionKey, icon: Shapes, label: 'Elements' },
-<<<<<<< HEAD
         { key: 'pen' as SectionKey, icon: Pen, label: 'Pen' },
-=======
->>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
     ];
 
     const isTextSelected = selectedElement?.type === 'text';
@@ -313,7 +291,6 @@ export default function Sidebar({
                                 {key === 'elements' && (
                                     <ElementsControl onAddElement={onAddShape} />
                                 )}
-<<<<<<< HEAD
                                 {key === 'pen' && (
                                     <PenControl
                                         penColor={penColor}
@@ -326,8 +303,6 @@ export default function Sidebar({
                                         isEraserMode={isEraserMode}
                                     />
                                 )}
-=======
->>>>>>> a989eabaafb1dbde69e8536cb0b42df59b1ace73
                             </div>
                         )}
                     </div>
