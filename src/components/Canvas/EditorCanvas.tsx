@@ -1,7 +1,8 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { Stage, Layer, Rect, Text, Image, Circle, Group, Transformer, Line } from 'react-konva';
+import GridLayer from './GridLayer';
 import { v4 as uuidv4 } from 'uuid';
 import {
     Screenshot,
@@ -28,6 +29,13 @@ interface EditorCanvasProps {
     penWeight?: number;
     onAddPenElement?: (element: PenElement) => void;
     onRemoveElement?: (elementId: string) => void;
+    zoom?: number;
+    isPreviewMode?: boolean;
+}
+
+export interface EditorCanvasRef {
+    exportImage: (screenshotIndex: number, format?: 'png' | 'jpg', quality?: number) => string | null;
+    exportAllImages: (format?: 'png' | 'jpg', quality?: number) => Array<{ index: number; dataUri: string }>;
 }
 
 // Text Element with advanced resizing and editing
@@ -88,66 +96,85 @@ function TextCanvasElement({
         });
     };
 
-    const handleDoubleClick = () => {
+    const openEditor = useCallback((cursorIndex: number, lineIndexForScroll = 0) => {
         const textNode = textRef.current;
         if (!textNode) return;
 
         setIsEditing(true);
+        if (trRef.current) trRef.current.nodes([]);
 
-        // Hide transformer during editing
-        if (trRef.current) {
-            trRef.current.nodes([]);
-        }
-
-        // Get stage and create textarea for editing
         const stage = textNode.getStage();
         if (!stage) return;
 
         const stageContainer = stage.container();
         const textPosition = textNode.getAbsolutePosition();
         const stageBox = stageContainer.getBoundingClientRect();
+        const stageScale = stage.scaleX();
+        const stageX = stage.x();
+        const stageY = stage.y();
 
-        // Create textarea
+        const screenX = stageBox.left + stageX + textPosition.x * stageScale;
+        const screenY = stageBox.top + stageY + textPosition.y * stageScale;
+        const textW = textNode.width() * textNode.scaleX();
+        const textH = textNode.height() * textNode.scaleY();
+        const screenW = (textW + 20) * stageScale;
+        const screenH = Math.min((textH + 20) * stageScale, 450);
+
         const textarea = document.createElement('textarea');
         stageContainer.appendChild(textarea);
 
         textarea.value = element.content;
-        textarea.style.position = 'absolute';
-        textarea.style.top = `${stageBox.top + textPosition.y}px`;
-        textarea.style.left = `${stageBox.left + textPosition.x}px`;
-        textarea.style.width = `${textNode.width() * textNode.scaleX() + 20}px`;
-        textarea.style.height = `${textNode.height() * textNode.scaleY() + 20}px`;
-        textarea.style.fontSize = `${element.fontSize * CANVAS_SCALE}px`;
+        textarea.style.position = 'fixed';
+        textarea.style.left = `${screenX}px`;
+        textarea.style.top = `${screenY}px`;
+        textarea.style.width = `${screenW}px`;
+        textarea.style.height = `${screenH}px`;
+        textarea.style.maxHeight = '80vh';
+        textarea.style.fontSize = `${element.fontSize * CANVAS_SCALE * stageScale}px`;
         textarea.style.fontFamily = element.fontFamily;
         textarea.style.fontWeight = element.fontWeight;
         textarea.style.border = '2px solid #3B82F6';
-        textarea.style.borderRadius = '4px';
-        textarea.style.padding = '4px 8px';
+        textarea.style.borderRadius = '6px';
+        textarea.style.padding = '8px 10px';
         textarea.style.margin = '0';
-        textarea.style.overflow = 'hidden';
-        textarea.style.background = 'rgba(255,255,255,0.95)';
+        textarea.style.overflow = 'auto';
+        textarea.style.background = 'rgba(255,255,255,0.98)';
         textarea.style.color = '#000';
         textarea.style.outline = 'none';
         textarea.style.resize = 'none';
-        textarea.style.lineHeight = '1.2';
-        textarea.style.transformOrigin = 'left top';
-        textarea.style.zIndex = '1000';
+        textarea.style.lineHeight = '1.25';
+        textarea.style.zIndex = '10000';
+        textarea.style.boxSizing = 'border-box';
 
         textarea.focus();
-        textarea.select();
+        const safeIndex = Math.min(element.content.length, Math.max(0, cursorIndex));
+        textarea.setSelectionRange(safeIndex, safeIndex);
+        const lineHeightPx = element.fontSize * CANVAS_SCALE * stageScale * 1.25;
+        textarea.scrollTop = Math.max(0, (lineIndexForScroll - 2) * lineHeightPx);
+
+        // const removeTextarea = () => { (old code)
+        //     if (textarea.parentNode) {
+        //         textarea.parentNode.removeChild(textarea);
+        //     }
+        //     setIsEditing(false);
+
+        //     // Re-attach transformer
+        //     if (trRef.current && textRef.current) {
+        //         trRef.current.nodes([textRef.current]);
+        //         trRef.current.getLayer()?.batchDraw();
+        //     }
+        // };
 
         const removeTextarea = () => {
-            if (textarea.parentNode) {
-                textarea.parentNode.removeChild(textarea);
-            }
-            setIsEditing(false);
+    textarea.remove(); // Safe — does nothing if already removed
 
-            // Re-attach transformer
-            if (trRef.current && textRef.current) {
-                trRef.current.nodes([textRef.current]);
-                trRef.current.getLayer()?.batchDraw();
-            }
-        };
+    setIsEditing(false);
+
+    if (trRef.current && textRef.current) {
+        trRef.current.nodes([textRef.current]);
+        trRef.current.getLayer()?.batchDraw();
+    }
+};
 
         const handleOutsideClick = (e: MouseEvent) => {
             if (e.target !== textarea) {
@@ -173,13 +200,34 @@ function TextCanvasElement({
         textarea.addEventListener('blur', () => {
             onUpdate({ content: textarea.value });
             removeTextarea();
+            window.removeEventListener('click', handleOutsideClick);
         });
 
-        // Delay adding click listener to prevent immediate trigger
         setTimeout(() => {
             window.addEventListener('click', handleOutsideClick);
-        }, 100);
-    };
+        }, 150);
+    }, [element.content, element.fontSize, element.fontFamily, element.fontWeight, element.width, onUpdate]);
+
+    const handleDoubleClick = useCallback((e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+        const relPos = (e.target as Konva.Text).getRelativePointerPosition();
+        const localX = relPos ? relPos.x : 0;
+        const localY = relPos ? relPos.y : 0;
+        const lineHeight = element.fontSize * 1.2;
+        const approxCharWidth = Math.max(8, element.fontSize * 0.5);
+        const charsPerLine = Math.max(1, Math.floor(element.width / approxCharWidth));
+        const lineIndex = Math.max(0, Math.floor(localY / lineHeight));
+        const colIndex = Math.max(0, Math.floor(localX / approxCharWidth));
+        const estimatedCursorIndex = Math.min(
+            element.content.length,
+            Math.max(0, lineIndex * charsPerLine + colIndex)
+        );
+        openEditor(estimatedCursorIndex, lineIndex);
+    }, [element.content.length, element.fontSize, element.width, openEditor]);
+
+    const handleClick = useCallback(() => {
+        onSelect();
+        openEditor(0);
+    }, [onSelect, openEditor]);
 
     return (
         <>
@@ -194,9 +242,12 @@ function TextCanvasElement({
                 fill={element.fill}
                 width={element.width}
                 align={element.align}
+                wrap="word"
+                listening={true}
+                hitStrokeWidth={8}
                 draggable={!element.locked && !isEditing}
-                onClick={onSelect}
-                onTap={onSelect}
+                onClick={handleClick}
+                onTap={handleClick}
                 onDblClick={handleDoubleClick}
                 onDblTap={handleDoubleClick}
                 onDragEnd={handleDragEnd}
@@ -232,7 +283,68 @@ function TextCanvasElement({
     );
 }
 
-// Image Element with proper resizing
+// Background Image Element (full frame)
+function BackgroundImageElement({
+    x,
+    y,
+    width,
+    height,
+    imageUrl,
+    isActive,
+}: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    imageUrl: string;
+    isActive: boolean;
+}) {
+    const [image, setImage] = useState<HTMLImageElement | null>(null);
+
+    useEffect(() => {
+        const img = new window.Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            if (img.width > 0 && img.height > 0) {
+                setImage(img);
+            }
+        };
+        img.onerror = () => {
+            console.error('Failed to load background image:', imageUrl);
+            setImage(null);
+        };
+        img.src = imageUrl;
+    }, [imageUrl]);
+
+    if (!image) {
+        // Show placeholder while loading
+        return (
+            <Rect
+                x={x}
+                y={y}
+                width={width}
+                height={height}
+                fill="#333333"
+                cornerRadius={8}
+            />
+        );
+    }
+
+
+
+    return (
+        <Image
+            x={x}
+            y={y}
+            image={image}
+            width={width}
+            height={height}
+            cornerRadius={8}
+        />
+    );
+}
+
+// // Image Element with proper resizing  (original code)
 function ImageCanvasElement({
     element,
     isSelected,
@@ -348,6 +460,8 @@ function ImageCanvasElement({
         </>
     );
 }
+
+
 
 // Shape Element with proper resizing
 function ShapeCanvasElement({
@@ -706,11 +820,11 @@ function ShapeCanvasElement({
     }
 
     // Render custom shapes (all non-rect/circle shapes)
-    const customShapes = ['triangle-up', 'triangle-down', 'diamond', 'pentagon', 'hexagon', 'octagon', 
-                          'star-5', 'star-10', 'star-12', 'arrow-right', 'arrow-left', 'arrow-flag', 'banner',
-                          'speech-bubble-rect', 'speech-bubble-oval', 'heart', 'parallelogram', 
-                          'trapezoid-up', 'trapezoid-down', 'rounded-bottom', 'rounded-top', 'pill-vertical'];
-    
+    const customShapes = ['triangle-up', 'triangle-down', 'diamond', 'pentagon', 'hexagon', 'octagon',
+        'star-5', 'star-10', 'star-12', 'arrow-right', 'arrow-left', 'arrow-flag', 'banner',
+        'speech-bubble-rect', 'speech-bubble-oval', 'heart', 'parallelogram',
+        'trapezoid-up', 'trapezoid-down', 'rounded-bottom', 'rounded-top', 'pill-vertical'];
+
     if (customShapes.includes(element.shapeType)) {
         const points = getShapePoints();
         return (
@@ -892,7 +1006,7 @@ function PenCanvasElement({
     );
 }
 
-export default function EditorCanvas({
+export default forwardRef<EditorCanvasRef, EditorCanvasProps>(function EditorCanvas({
     screenshots,
     activeScreenshotIndex,
     selectedElementId,
@@ -900,11 +1014,13 @@ export default function EditorCanvas({
     onUpdateElement,
     isPenMode = false,
     isEraserMode = false,
-    penColor = '#0000FF',
-    penWeight = 27,
+    penColor = '#000000',
+    penWeight = 5,
     onAddPenElement,
     onRemoveElement,
-}: EditorCanvasProps) {
+    zoom = 1,
+    isPreviewMode = false,
+}: EditorCanvasProps, ref) {
     const containerRef = useRef<HTMLDivElement>(null);
     const stageRef = useRef<Konva.Stage>(null);
     const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -912,30 +1028,90 @@ export default function EditorCanvas({
     const [currentPoints, setCurrentPoints] = useState<number[]>([]);
     const currentPenElementRef = useRef<string | null>(null);
 
-    // Calculate stage dimensions
+    // Calculate stage dimensions (ResizeObserver so we get size after layout)
     useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+
         const updateSize = () => {
-            if (containerRef.current) {
-                const { width, height } = containerRef.current.getBoundingClientRect();
+            const { width, height } = el.getBoundingClientRect();
+            if (width > 0 && height > 0) {
                 setStageSize({ width, height });
             }
         };
 
         updateSize();
+        const ro = new ResizeObserver(() => {
+            updateSize();
+        });
+        ro.observe(el);
         window.addEventListener('resize', updateSize);
-        return () => window.removeEventListener('resize', updateSize);
+        return () => {
+            ro.disconnect();
+            window.removeEventListener('resize', updateSize);
+        };
     }, []);
 
+    // Calculate total content dimensions
     const scaledWidth = SCREENSHOT_WIDTH * CANVAS_SCALE;
     const scaledHeight = SCREENSHOT_HEIGHT * CANVAS_SCALE;
     const gap = 20;
 
-    // Calculate total content width
+    // Zoom-based centering offsets
     const totalWidth = screenshots.length * scaledWidth + (screenshots.length - 1) * gap;
+    const stageX = (stageSize.width - totalWidth * zoom) / 2;
+    const stageY = (stageSize.height - scaledHeight * zoom) / 2;
 
-    // Center the screenshots
-    const startX = Math.max(40, (stageSize.width - totalWidth) / 2);
-    const startY = 40;
+    // Expose export function
+    useImperativeHandle(ref, () => ({
+        exportImage: (screenshotIndex: number, format: 'png' | 'jpg' = 'png', quality: number = 1.0) => {
+            if (!stageRef.current) return null;
+
+            const stage = stageRef.current;
+            // Find the group for the specific screenshot
+            const group = stage.findOne(`#screenshot-group-${screenshotIndex}`);
+
+            if (!group) return null;
+
+            // Export just that group
+            const mimeType = format === 'jpg' ? 'image/jpeg' : 'image/png';
+            return group.toDataURL({
+                pixelRatio: 2 / CANVAS_SCALE, // High res export
+                mimeType,
+                quality: format === 'jpg' ? quality : undefined,
+            });
+        },
+        exportAllImages: (format: 'png' | 'jpg' = 'png', quality: number = 1.0) => {
+            if (!stageRef.current) return [];
+
+            const stage = stageRef.current;
+            const results: Array<{ index: number; dataUri: string }> = [];
+
+            screenshots.forEach((_, index) => {
+                const group = stage.findOne(`#screenshot-group-${index}`);
+                if (group) {
+                    const mimeType = format === 'jpg' ? 'image/jpeg' : 'image/png';
+                    const dataUri = group.toDataURL({
+                        pixelRatio: 2 / CANVAS_SCALE,
+                        mimeType,
+                        quality: format === 'jpg' ? quality : undefined,
+                    });
+                    results.push({ index, dataUri });
+                }
+            });
+
+            return results;
+        }
+    }));
+
+    // Helper to get logical position from pointer event
+    const getLogicalPosition = (stage: Konva.Stage) => {
+        const transform = stage.getAbsoluteTransform().copy();
+        transform.invert();
+        const pointerPos = stage.getPointerPosition();
+        if (!pointerPos) return null;
+        return transform.point(pointerPos);
+    };
 
     // Eraser handler - find and remove elements under cursor
     const handleEraser = (e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -945,16 +1121,18 @@ export default function EditorCanvas({
         if (!stage) return;
 
         const activeScreenshot = screenshots[activeScreenshotIndex];
-        const pointerPos = stage.getPointerPosition();
-        if (!pointerPos) return;
+        const pos = getLogicalPosition(stage);
+        if (!pos) return;
 
         // Find elements that intersect with eraser area
         const eraserRadius = penWeight / CANVAS_SCALE;
-        const x = startX + activeScreenshotIndex * (scaledWidth + gap);
-        const y = startY;
 
-        const relativeX = (pointerPos.x - x) / CANVAS_SCALE;
-        const relativeY = (pointerPos.y - y) / CANVAS_SCALE;
+        // Calculate offset for active screenshot within the logical space
+        const screenshotOffset = activeScreenshotIndex * (scaledWidth + gap);
+
+        // Coordinates relative to the active screenshot (unscaled)
+        const relativeX = (pos.x - screenshotOffset) / CANVAS_SCALE;
+        const relativeY = pos.y / CANVAS_SCALE;
 
         // Check bounds
         if (relativeX < 0 || relativeX > SCREENSHOT_WIDTH || relativeY < 0 || relativeY > SCREENSHOT_HEIGHT) {
@@ -1002,29 +1180,26 @@ export default function EditorCanvas({
     };
 
     // Drawing handlers
-    const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    const handleStageMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
         if (isEraserMode) {
             handleEraser(e);
             return;
         }
 
         if (!isPenMode || !onAddPenElement) return;
-        
+
         const stage = e.target.getStage();
         if (!stage) return;
 
         const activeScreenshot = screenshots[activeScreenshotIndex];
-        const x = startX + activeScreenshotIndex * (scaledWidth + gap);
-        const y = startY;
+        const pos = getLogicalPosition(stage);
+        if (!pos) return;
 
-        // Get mouse position relative to screenshot
-        const pointerPos = stage.getPointerPosition();
-        if (!pointerPos) return;
+        const screenshotOffset = activeScreenshotIndex * (scaledWidth + gap);
+        const relativeX = (pos.x - screenshotOffset) / CANVAS_SCALE;
+        const relativeY = pos.y / CANVAS_SCALE;
 
-        const relativeX = (pointerPos.x - x) / CANVAS_SCALE;
-        const relativeY = (pointerPos.y - y) / CANVAS_SCALE;
-
-        // Check if click is within screenshot bounds
+        // Check click is within bounds
         if (relativeX < 0 || relativeX > SCREENSHOT_WIDTH || relativeY < 0 || relativeY > SCREENSHOT_HEIGHT) {
             return;
         }
@@ -1065,14 +1240,12 @@ export default function EditorCanvas({
         if (!stage) return;
 
         const activeScreenshot = screenshots[activeScreenshotIndex];
-        const x = startX + activeScreenshotIndex * (scaledWidth + gap);
-        const y = startY;
+        const pos = getLogicalPosition(stage);
+        if (!pos) return;
 
-        const pointerPos = stage.getPointerPosition();
-        if (!pointerPos) return;
-
-        const relativeX = (pointerPos.x - x) / CANVAS_SCALE;
-        const relativeY = (pointerPos.y - y) / CANVAS_SCALE;
+        const screenshotOffset = activeScreenshotIndex * (scaledWidth + gap);
+        const relativeX = (pos.x - screenshotOffset) / CANVAS_SCALE;
+        const relativeY = pos.y / CANVAS_SCALE;
 
         // Check bounds
         if (relativeX < 0 || relativeX > SCREENSHOT_WIDTH || relativeY < 0 || relativeY > SCREENSHOT_HEIGHT) {
@@ -1108,49 +1281,50 @@ export default function EditorCanvas({
     };
 
     // Don't render Stage until we have valid dimensions
-    if (stageSize.width === 0 || stageSize.height === 0) {
-        return (
-            <div ref={containerRef} className="canvas-container" style={{ width: '100%', height: '100%' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                    Loading canvas...
-                </div>
-            </div>
-        );
-    }
+    const hasSize = stageSize.width > 0 && stageSize.height > 0;
 
     return (
-        <div 
-            ref={containerRef} 
-            className="canvas-container"
-            style={{
-                cursor: isPenMode ? 'crosshair' : isEraserMode ? 'grab' : 'default'
-            }}
-        >
+        <div ref={containerRef} className="canvas-container relative w-full h-full bg-[#1e1e1e] overflow-hidden flex items-center justify-center" style={{ minHeight: 0 }}>
+            {!hasSize ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#888' }}>
+                    Loading canvas...
+                </div>
+            ) : (
             <Stage
                 ref={stageRef}
                 width={stageSize.width}
                 height={stageSize.height}
-                onClick={handleStageClick}
-                onMouseDown={handleMouseDown}
+                scale={{ x: zoom, y: zoom }}
+                x={stageX}
+                y={stageY}
+                onMouseDown={handleStageMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
+                onClick={handleStageClick}
                 style={{
                     cursor: isPenMode ? 'crosshair' : isEraserMode ? 'grab' : 'default'
                 }}
             >
+                {!isPreviewMode && <GridLayer width={stageSize.width} height={stageSize.height} scale={zoom} />}
+
                 <Layer>
                     {screenshots.map((screenshot, index) => {
-                        const x = startX + index * (scaledWidth + gap);
+                        const x = index * (scaledWidth + gap);
                         const isActive = index === activeScreenshotIndex;
 
                         return (
-                            <Group key={screenshot.id}>
+                            <Group
+                                key={screenshot.id}
+                                id={`screenshot-group-${index}`}
+                            >
                                 {/* Screenshot background */}
                                 {(() => {
                                     const bgColor = screenshot.backgroundColor;
+                                    
                                     // Check if it's a gradient
                                     if (bgColor.includes('gradient')) {
+                                        
                                         // Parse gradient string
                                         const gradientMatch = bgColor.match(/linear-gradient\(to (right|bottom|bottom right|top right), (#[0-9A-Fa-f]{6}), (#[0-9A-Fa-f]{6})\)|radial-gradient\(circle, (#[0-9A-Fa-f]{6}), (#[0-9A-Fa-f]{6})\)/);
                                         if (gradientMatch) {
@@ -1168,12 +1342,12 @@ export default function EditorCanvas({
                                             // Convert to Konva gradient
                                             let startPoint = { x: 0, y: 0 };
                                             let endPoint = { x: scaledWidth, y: 0 };
-                                            
+
                                             if (direction === 'radial') {
                                                 return (
                                                     <Rect
                                                         x={x}
-                                                        y={startY}
+                                                        y={0}
                                                         width={scaledWidth}
                                                         height={scaledHeight}
                                                         fillRadialGradientStartPoint={{ x: scaledWidth / 2, y: scaledHeight / 2 }}
@@ -1194,11 +1368,11 @@ export default function EditorCanvas({
                                                 } else if (direction === 'top right') {
                                                     endPoint = { x: scaledWidth, y: 0 };
                                                 }
-                                                
+
                                                 return (
                                                     <Rect
                                                         x={x}
-                                                        y={startY}
+                                                        y={0}
                                                         width={scaledWidth}
                                                         height={scaledHeight}
                                                         fillLinearGradientStartPoint={startPoint}
@@ -1212,12 +1386,12 @@ export default function EditorCanvas({
                                             }
                                         }
                                     }
-                                    
+
                                     // Solid color fallback
                                     return (
                                         <Rect
                                             x={x}
-                                            y={startY}
+                                            y={0}
                                             width={scaledWidth}
                                             height={scaledHeight}
                                             fill={bgColor}
@@ -1231,7 +1405,7 @@ export default function EditorCanvas({
                                 {/* Elements scaled and positioned within screenshot */}
                                 <Group
                                     x={x}
-                                    y={startY}
+                                    y={0}
                                     scaleX={CANVAS_SCALE}
                                     scaleY={CANVAS_SCALE}
                                     clipX={0}
@@ -1239,7 +1413,21 @@ export default function EditorCanvas({
                                     clipWidth={SCREENSHOT_WIDTH}
                                     clipHeight={SCREENSHOT_HEIGHT}
                                 >
-                                    {screenshot.elements.map(element => (
+                                    {/* Background image (full frame, rendered first) */}
+                                    {screenshot.backgroundImage && (
+                                        <BackgroundImageElement
+                                            x={0}
+                                            y={0}
+                                            width={SCREENSHOT_WIDTH}
+                                            height={SCREENSHOT_HEIGHT}
+                                            imageUrl={screenshot.backgroundImage}
+                                            isActive={isActive}
+                                        />
+                                    )}
+                                    
+                                    {[...screenshot.elements]
+                                        .sort((a, b) => (a.type === 'text' ? 1 : 0) - (b.type === 'text' ? 1 : 0))
+                                        .map(element => (
                                         <CanvasElement
                                             key={element.id}
                                             element={element}
@@ -1253,7 +1441,7 @@ export default function EditorCanvas({
                                 {/* Screenshot number label */}
                                 <Text
                                     x={x}
-                                    y={startY + scaledHeight + 10}
+                                    y={scaledHeight + 10}
                                     width={scaledWidth}
                                     text={`#${index + 1}`}
                                     fontSize={14}
@@ -1264,7 +1452,7 @@ export default function EditorCanvas({
                                 {/* Dimensions label */}
                                 <Text
                                     x={x}
-                                    y={startY + scaledHeight + 28}
+                                    y={scaledHeight + 28}
                                     width={scaledWidth}
                                     text={`${SCREENSHOT_WIDTH}px × ${SCREENSHOT_HEIGHT}px`}
                                     fontSize={11}
@@ -1276,6 +1464,8 @@ export default function EditorCanvas({
                     })}
                 </Layer>
             </Stage>
+            )}
         </div>
     );
-}
+});
+

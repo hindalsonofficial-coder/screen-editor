@@ -17,6 +17,10 @@ export interface BaseElement {
     rotation: number;
     opacity: number;
     locked: boolean;
+    shadowColor?: string;
+    shadowBlur?: number;
+    shadowOffsetX?: number;
+    shadowOffsetY?: number;
 }
 
 export interface TextElement extends BaseElement {
@@ -39,10 +43,10 @@ export interface ImageElement extends BaseElement {
 
 export interface ShapeElement extends BaseElement {
     type: 'shape';
-    shapeType: 'rectangle' | 'circle' | 'rounded-rect' | 'triangle-up' | 'triangle-down' | 'diamond' | 'pentagon' | 
-              'hexagon' | 'octagon' | 'star-5' | 'star-10' | 'star-12' | 'arrow-right' | 'arrow-left' | 
-              'arrow-flag' | 'banner' | 'speech-bubble-rect' | 'speech-bubble-oval' | 'heart' | 
-              'parallelogram' | 'trapezoid-up' | 'trapezoid-down' | 'rounded-bottom' | 'rounded-top' | 'pill-vertical';
+    shapeType: 'rectangle' | 'circle' | 'rounded-rect' | 'triangle-up' | 'triangle-down' | 'diamond' | 'pentagon' |
+    'hexagon' | 'octagon' | 'star-5' | 'star-10' | 'star-12' | 'arrow-right' | 'arrow-left' |
+    'arrow-flag' | 'banner' | 'speech-bubble-rect' | 'speech-bubble-oval' | 'heart' |
+    'parallelogram' | 'trapezoid-up' | 'trapezoid-down' | 'rounded-bottom' | 'rounded-top' | 'pill-vertical';
     size: Size;
     fill: string;
     stroke: string;
@@ -66,6 +70,7 @@ export interface Screenshot {
     id: string;
     name: string;
     backgroundColor: string;
+    backgroundImage?: string; // Base screenshot image (full frame)
     elements: EditorElement[];
 }
 
@@ -74,6 +79,7 @@ export interface EditorState {
     screenshots: Screenshot[];
     activeScreenshotIndex: number;
     selectedElementId: string | null;
+    zoom: number;
 }
 
 export interface EditorActions {
@@ -85,10 +91,17 @@ export interface EditorActions {
     moveScreenshotRight: (index: number) => void;
     setActiveScreenshot: (index: number) => void;
     updateScreenshotBackground: (id: string, color: string) => void;
+    updateScreenshotBackgroundImage: (id: string, imageUrl: string | null) => void;
     addElement: (screenshotId: string, element: EditorElement) => void;
     updateElement: (screenshotId: string, elementId: string, updates: Partial<EditorElement>) => void;
     removeElement: (screenshotId: string, elementId: string) => void;
+    replaceElementWithText: (screenshotId: string, elementId: string) => void;
     selectElement: (elementId: string | null) => void;
+    zoomIn: () => void;
+    zoomOut: () => void;
+    resetZoom: () => void;
+    setZoom: (zoom: number) => void;
+    applyTemplate: (template: { backgroundColor: string; elements: EditorElement[] }) => void;
 }
 
 // Preset colors for background picker

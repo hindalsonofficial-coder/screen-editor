@@ -4,17 +4,38 @@ import { useState } from 'react';
 import {
     ChevronLeft,
     ChevronRight,
-    Download,
     Undo2,
-    Redo2
+    Redo2,
+    Eye,
+    Save
 } from 'lucide-react';
+import ExportOptions, { ExportOptions as ExportOptionsType } from './ExportOptions';
 
 interface TopBarProps {
     projectName: string;
     onProjectNameChange: (name: string) => void;
+    onExport: (options: ExportOptionsType) => void;
+    onTogglePreview: () => void;
+    onUndo: () => void;
+    onRedo: () => void;
+    canUndo: boolean;
+    canRedo: boolean;
+    screenshotCount: number;
+    onSaveTemplate: () => void;
 }
 
-export default function TopBar({ projectName, onProjectNameChange }: TopBarProps) {
+export default function TopBar({ 
+    projectName, 
+    onProjectNameChange, 
+    onExport, 
+    onTogglePreview,
+    onUndo,
+    onRedo,
+    canUndo,
+    canRedo,
+    screenshotCount,
+    onSaveTemplate
+}: TopBarProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(projectName);
 
@@ -61,19 +82,43 @@ export default function TopBar({ projectName, onProjectNameChange }: TopBarProps
             </div>
 
             <div className="top-bar-center">
-                <button className="top-bar-action-btn" title="Undo" disabled>
+                <button 
+                    className="top-bar-action-btn" 
+                    title="Undo (Ctrl+Z)" 
+                    onClick={onUndo}
+                    disabled={!canUndo}
+                >
                     <Undo2 size={18} />
                 </button>
-                <button className="top-bar-action-btn" title="Redo" disabled>
+                <button 
+                    className="top-bar-action-btn" 
+                    title="Redo (Ctrl+Y)" 
+                    onClick={onRedo}
+                    disabled={!canRedo}
+                >
                     <Redo2 size={18} />
                 </button>
             </div>
 
             <div className="top-bar-right">
-                <button className="export-btn" title="Export (Coming soon)" disabled>
-                    <Download size={18} />
-                    <span>Export</span>
+                <button
+                    className="top-bar-action-btn"
+                    title="Preview Mode"
+                    onClick={onTogglePreview}
+                >
+                    <Eye size={18} />
                 </button>
+                <button
+                    className="top-bar-action-btn"
+                    title="Save current screen as template"
+                    onClick={onSaveTemplate}
+                >
+                    <Save size={16} />
+                </button>
+                <ExportOptions 
+                    onExport={onExport}
+                    screenshotCount={screenshotCount}
+                />
                 <button className="top-bar-nav-btn" title="Next">
                     <ChevronRight size={20} />
                 </button>
