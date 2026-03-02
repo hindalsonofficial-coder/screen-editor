@@ -397,6 +397,80 @@ export default function Home() {
     prefetchTemplates();
   }, []);
 
+  const handleExport = async (options: ExportOptionsType) => {
+    if (!canvasRef.current) return;
+
+    try {
+      if (options.exportAll) {
+        const exports = canvasRef.current.exportAllImages(options.format, options.quality);
+
+        if (exports.length === 0) {
+          alert('No screenshots to export');
+          return;
+        }
+
+        const files = await Promise.all(
+          exports.map(async (exp) => {
+            const extension = options.format === 'jpg' ? 'jpg' : 'png';
+            const fileName = `${projectName.replace(/\s+/g, '-').toLowerCase()}-screen-${exp.index + 1}.${extension}`;
+
+            return {
+              dataUri: exp.dataUri,
+              fileName,
+            };
+          })
+        );
+
+        await downloadMultipleFiles(files, 300);
+      } else {
+        const dataUri = canvasRef.current.exportImage(activeScreenshotIndex, options.format, options.quality);
+
+        if (!dataUri) {
+          alert('Failed to export screenshot');
+          return;
+        }
+
+        const extension = options.format === 'jpg' ? 'jpg' : 'png';
+        const fileName = `${projectName.replace(/\s+/g, '-').toLowerCase()}-screen-${activeScreenshotIndex + 1}.${extension}`;
+        downloadURI(dataUri, fileName);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Failed to export screenshots');
+    }
+  };
+
+  const handleSaveTemplate = async () => {
+    const defaultName = `${projectName} - Screen ${activeScreenshotIndex + 1}`;
+    const name = window.prompt('Template name', defaultName);
+    if (!name || !name.trim()) return;
+
+    try {
+      const res = await fetch('/api/templates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          backgroundColor: activeScreenshot.backgroundColor,
+          elements: activeScreenshot.elements,
+          category: 'Custom',
+        }),
+      });
+
+      if (!res.ok) {
+        alert('Template save nahi ho paya.');
+        return;
+      }
+
+      alert('Template save ho gaya. Templates list mein mil jayega.');
+    } catch (error) {
+      console.error('Save template error:', error);
+      alert('Template save nahi ho paya.');
+    }
+  };
+
   const selectedElement = useMemo(() => {
     if (!selectedElementId) return null;
     return activeScreenshot.elements.find(el => el.id === selectedElementId) || null;
@@ -466,6 +540,9 @@ export default function Home() {
         <TopBar
           projectName={projectName}
           onProjectNameChange={setProjectName}
+          onExport={handleExport}
+          onSaveTemplate={handleSaveTemplate}
+          onTogglePreview={() => setIsPreviewMode(true)}
           onUndo={undo}
           onRedo={redo}
           canUndo={canUndo}
@@ -517,7 +594,14 @@ export default function Home() {
           />
 
           {!isPreviewMode && (
-            <DashboardTemplates onApplyTemplate={applyTemplate} />
+            <DashboardTemplates
+              onApplyTemplate={(template) =>
+                applyTemplate({
+                  backgroundColor: template.backgroundColor ?? activeScreenshot.backgroundColor,
+                  elements: template.elements,
+                })
+              }
+            />
           )}
 
           {!isPreviewMode && (
@@ -552,7 +636,12 @@ export default function Home() {
             onPenModeChange={setIsPenMode}
             isEraserMode={isEraserMode}
             onEraserModeChange={setIsEraserMode}
-            onApplyTemplate={applyTemplate}
+            onApplyTemplate={(template) =>
+              applyTemplate({
+                backgroundColor: template.backgroundColor ?? activeScreenshot.backgroundColor,
+                elements: template.elements,
+              })
+            }
             onUploadScreenshot={handleUploadScreenshot}
             hasBackgroundImage={!!activeScreenshot.backgroundImage}
             onRemoveBackgroundImage={handleRemoveBackgroundImage}
